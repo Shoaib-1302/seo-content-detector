@@ -483,7 +483,25 @@ def show_visualizations_page(features_df):
     st.header("📊 Advanced Visualizations")
     
     # Parse embeddings
-    embeddings = np.array(features_df['embedding'].apply(eval).tolist())
+# Handle invalid or missing embeddings safely
+def safe_eval(x):
+    try:
+        if pd.isna(x) or x in ["", "nan", "None"]:
+            return []
+        return eval(x)
+    except Exception:
+        return []
+
+embeddings_list = features_df['embedding'].apply(safe_eval).tolist()
+
+# Filter out empty embeddings
+embeddings_list = [e for e in embeddings_list if len(e) > 0]
+
+if not embeddings_list:
+    st.warning("No valid embeddings found in the dataset.")
+    return
+
+embeddings = np.array(embeddings_list)
     
     # Similarity heatmap
     st.subheader("🔥 Content Similarity Heatmap")
@@ -562,4 +580,5 @@ def show_visualizations_page(features_df):
 if __name__ == "__main__":
 
     main()
+
 
