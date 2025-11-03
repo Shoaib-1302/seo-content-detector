@@ -98,8 +98,7 @@ def main():
             "🏠 Home",
             "🔎 Analyze URL",
             "📈 Dashboard",
-            "🔄 Duplicate Detection",
-            "📊 Visualizations"
+            "🔄 Duplicate Detection"
         ])
         
         st.markdown("---")
@@ -130,8 +129,6 @@ def main():
         show_dashboard_page(features_df, extracted_df)
     elif page == "🔄 Duplicate Detection":
         show_duplicates_page(features_df)
-    elif page == "📊 Visualizations":
-        show_visualizations_page(features_df)
 
 def show_home_page():
     """Display home page with overview."""
@@ -225,22 +222,14 @@ def show_analyze_page(model_data, features_df):
 def analyze_url_complete(url, model_data, features_df, include_advanced=True):
     """Complete URL analysis with all features."""
     try:
-        # Scrape and parse
         html_content, parsed = scrape_and_parse_url(url)
         if not parsed['body_text']:
             return {'error': 'No content extracted from URL'}
         
-        # Extract features
         features = extract_features(parsed['body_text'], model_data['model_objects'])
-        
-        # Predict quality
         quality_result = predict_quality(features, model_data)
-        
-        # Compute similarity
         similarity_results = compute_similarity(
-            features['embedding'],
-            features_df,
-            threshold=0.70
+            features['embedding'], features_df, threshold=0.70
         )
         
         result = {
@@ -256,7 +245,6 @@ def analyze_url_complete(url, model_data, features_df, include_advanced=True):
             'similar_to': similarity_results
         }
         
-        # Advanced NLP
         if include_advanced:
             result['sentiment'] = extract_sentiment(parsed['body_text'])
             result['entities'] = extract_entities(parsed['body_text'])
@@ -272,37 +260,29 @@ def display_analysis_results(result, include_advanced):
     """Display analysis results with visualizations."""
     st.success("✅ Analysis Complete!")
     
-    # Title and URL
     st.subheader(result.get('title', 'Untitled'))
     st.caption(result['url'])
     
     st.markdown("---")
-    
-    # Key Metrics
     st.subheader("📊 Key Metrics")
-    col1, col2, col3, col4 = st.columns(4)
     
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         quality_class = f"quality-{result['quality_label'].lower()}"
         st.markdown(f"**Quality Score**")
         st.markdown(f'<p class="{quality_class}">{result["quality_label"]}</p>', 
                     unsafe_allow_html=True)
-    
     with col2:
         st.metric("Word Count", result['word_count'])
-    
     with col3:
         st.metric("Readability", f"{result['readability']:.1f}")
-    
     with col4:
         status = "❌ Yes" if result['is_thin'] else "✅ No"
         st.markdown(f"**Thin Content**")
         st.markdown(status)
     
-    # Quality Probabilities
     st.subheader("🎯 Quality Confidence")
     probs = result['quality_probabilities']
-    
     fig = go.Figure(data=[
         go.Bar(
             x=list(probs.keys()),
@@ -318,7 +298,6 @@ def display_analysis_results(result, include_advanced):
     )
     st.plotly_chart(fig, use_container_width=True)
     
-    # Keywords
     st.subheader("🔑 Top Keywords")
     keywords = result['top_keywords'].split('|') if result['top_keywords'] else []
     if keywords:
@@ -327,7 +306,6 @@ def display_analysis_results(result, include_advanced):
             with cols[i]:
                 st.markdown(f"**`{keyword}`**")
     
-    # Similar Content
     if result['similar_to']:
         st.subheader("🔄 Similar Content")
         similar_df = pd.DataFrame(result['similar_to'])
@@ -336,21 +314,15 @@ def display_analysis_results(result, include_advanced):
     else:
         st.info("No similar content found in the database.")
     
-    # Advanced NLP Results
     if include_advanced and 'sentiment' in result:
         st.markdown("---")
         st.subheader("🧠 Advanced NLP Analysis")
-        
-        # Sentiment
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("#### 😊 Sentiment Analysis")
             sentiment = result['sentiment']
-            st.metric("Polarity", f"{sentiment['polarity']:.2f}", 
-                     help="Range: -1 (negative) to +1 (positive)")
-            st.metric("Subjectivity", f"{sentiment['subjectivity']:.2f}",
-                     help="Range: 0 (objective) to 1 (subjective)")
-        
+            st.metric("Polarity", f"{sentiment['polarity']:.2f}")
+            st.metric("Subjectivity", f"{sentiment['subjectivity']:.2f}")
         with col2:
             st.markdown("#### 📍 Named Entities")
             entities = result['entities']
@@ -359,25 +331,11 @@ def display_analysis_results(result, include_advanced):
                 st.dataframe(entity_df, use_container_width=True)
             else:
                 st.info("No named entities detected")
-        
-        # Topics
-        if result.get('topics'):
-            st.markdown("#### 📚 Topic Distribution")
-            topics_df = pd.DataFrame(result['topics'])
-            fig = px.bar(topics_df, x='topic_id', y='weight', 
-                        title="Dominant Topics")
-            st.plotly_chart(fig, use_container_width=True)
-        
-        # Word Cloud
-        if result.get('word_cloud_data'):
-            st.markdown("#### ☁️ Word Cloud")
-            st.image(result['word_cloud_data'])
 
 def show_dashboard_page(features_df, extracted_df):
     """Display dashboard with dataset statistics."""
     st.header("📈 Content Quality Dashboard")
     
-    # Load quality labels
     quality_labels = []
     for idx, row in features_df.iterrows():
         wc = row['word_count']
@@ -392,173 +350,60 @@ def show_dashboard_page(features_df, extracted_df):
     features_df['quality'] = quality_labels
     features_df['is_thin'] = features_df['word_count'] < 500
     
-    # Summary metrics
     col1, col2, col3, col4 = st.columns(4)
-    
     with col1:
         st.metric("Total Pages", len(features_df))
     with col2:
-        high_quality = (features_df['quality'] == 'High').sum()
-        st.metric("High Quality", high_quality)
+        st.metric("High Quality", (features_df['quality'] == 'High').sum())
     with col3:
-        thin_pages = features_df['is_thin'].sum()
-        st.metric("Thin Content", thin_pages)
+        st.metric("Thin Content", features_df['is_thin'].sum())
     with col4:
-        avg_readability = features_df['flesch_reading_ease'].mean()
-        st.metric("Avg Readability", f"{avg_readability:.1f}")
+        st.metric("Avg Readability", f"{features_df['flesch_reading_ease'].mean():.1f}")
     
     st.markdown("---")
-    
-    # Quality distribution
     col1, col2 = st.columns(2)
-    
     with col1:
         st.subheader("Quality Distribution")
         quality_counts = features_df['quality'].value_counts()
         fig = px.pie(values=quality_counts.values, names=quality_counts.index,
-                    color=quality_counts.index,
-                    color_discrete_map={'High': '#28a745', 'Medium': '#ffc107', 'Low': '#dc3545'})
+                     color=quality_counts.index,
+                     color_discrete_map={'High': '#28a745', 'Medium': '#ffc107', 'Low': '#dc3545'})
         st.plotly_chart(fig, use_container_width=True)
-    
     with col2:
         st.subheader("Word Count Distribution")
-        fig = px.histogram(features_df, x='word_count', nbins=20,
-                          title="Distribution of Word Counts")
-        fig.add_vline(x=500, line_dash="dash", line_color="red", 
-                     annotation_text="Thin Content Threshold")
+        fig = px.histogram(features_df, x='word_count', nbins=20)
+        fig.add_vline(x=500, line_dash="dash", line_color="red")
         st.plotly_chart(fig, use_container_width=True)
     
-    # Readability vs Word Count
     st.subheader("📊 Readability vs Word Count")
     fig = px.scatter(features_df, x='word_count', y='flesch_reading_ease',
-                    color='quality', size='sentence_count',
-                    color_discrete_map={'High': '#28a745', 'Medium': '#ffc107', 'Low': '#dc3545'},
-                    title="Content Quality Analysis")
+                     color='quality', size='sentence_count',
+                     color_discrete_map={'High': '#28a745', 'Medium': '#ffc107', 'Low': '#dc3545'})
     st.plotly_chart(fig, use_container_width=True)
     
-    # Data table
     st.subheader("📋 Dataset Overview")
     display_df = features_df[['url', 'word_count', 'sentence_count', 
-                               'flesch_reading_ease', 'quality', 'is_thin']].copy()
+                              'flesch_reading_ease', 'quality', 'is_thin']].copy()
     display_df.columns = ['URL', 'Words', 'Sentences', 'Readability', 'Quality', 'Thin']
     st.dataframe(display_df, use_container_width=True)
 
 def show_duplicates_page(features_df):
     """Display duplicate detection page."""
     st.header("🔄 Duplicate Content Detection")
-    
-    # Load or compute duplicates
     try:
         duplicates_df = pd.read_csv('data/duplicates.csv')
-        
         if len(duplicates_df) > 0:
             st.success(f"Found {len(duplicates_df)} duplicate pairs")
-            
-            # Similarity threshold selector
             threshold = st.slider("Similarity Threshold", 0.5, 1.0, 0.8, 0.05)
             filtered_df = duplicates_df[duplicates_df['similarity'] >= threshold]
-            
             st.subheader(f"📊 Duplicate Pairs (Similarity ≥ {threshold:.0%})")
-            
-            # Format for display
             display_df = filtered_df.copy()
             display_df['similarity'] = display_df['similarity'].apply(lambda x: f"{x:.2%}")
             st.dataframe(display_df, use_container_width=True)
-            
-            # Similarity distribution
-            st.subheader("📈 Similarity Distribution")
-            fig = px.histogram(duplicates_df, x='similarity', nbins=20,
-                             title="Distribution of Similarity Scores")
-            fig.add_vline(x=threshold, line_dash="dash", line_color="red",
-                         annotation_text="Current Threshold")
-            st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("No duplicate content found in the dataset.")
-            
     except FileNotFoundError:
         st.warning("No duplicates file found. Run the main pipeline first.")
 
-def show_visualizations_page(features_df):
-    """Display advanced visualizations."""
-    st.header("📊 Advanced Visualizations")
-    
-    # Parse embeddings
-    embeddings = np.array(features_df['embedding'].apply(eval).tolist())
-    
-    # Similarity heatmap
-    st.subheader("🔥 Content Similarity Heatmap")
-    
-    with st.spinner("Computing similarity matrix..."):
-        from sklearn.metrics.pairwise import cosine_similarity
-        similarity_matrix = cosine_similarity(embeddings)
-    
-    # Limit to first 20 for visualization
-    n_display = min(20, len(similarity_matrix))
-    sim_subset = similarity_matrix[:n_display, :n_display]
-    
-    fig = px.imshow(sim_subset, 
-                    title=f"Cosine Similarity Matrix (First {n_display} Pages)",
-                    color_continuous_scale='RdYlGn',
-                    aspect='auto')
-    fig.update_xaxes(side="bottom")
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Feature importance (mock data for visualization)
-    st.subheader("⚡ Feature Importance")
-    feature_importance = pd.DataFrame({
-        'feature': ['word_count', 'flesch_reading_ease', 'sentence_count'],
-        'importance': [0.45, 0.32, 0.23]
-    })
-    
-    fig = px.bar(feature_importance, x='importance', y='feature', 
-                orientation='h', title="Model Feature Importance")
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Correlation matrix
-    st.subheader("🔗 Feature Correlations")
-    corr_features = features_df[['word_count', 'sentence_count', 'flesch_reading_ease']]
-    corr_matrix = corr_features.corr()
-    
-    fig = px.imshow(corr_matrix, 
-                    text_auto=True,
-                    title="Feature Correlation Matrix",
-                    color_continuous_scale='RdBu_r')
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Box plots
-    st.subheader("📦 Feature Distributions by Quality")
-    quality_labels = []
-    for idx, row in features_df.iterrows():
-        wc = row['word_count']
-        fre = row['flesch_reading_ease']
-        if wc > 1500 and 50 <= fre <= 70:
-            quality_labels.append('High')
-        elif wc < 500 or fre < 30:
-            quality_labels.append('Low')
-        else:
-            quality_labels.append('Medium')
-    
-    features_df['quality'] = quality_labels
-    
-    fig = make_subplots(rows=1, cols=2, subplot_titles=("Word Count", "Readability"))
-    
-    for quality in ['High', 'Medium', 'Low']:
-        data = features_df[features_df['quality'] == quality]
-        fig.add_trace(
-            go.Box(y=data['word_count'], name=quality, marker_color={
-                'High': '#28a745', 'Medium': '#ffc107', 'Low': '#dc3545'
-            }[quality]),
-            row=1, col=1
-        )
-        fig.add_trace(
-            go.Box(y=data['flesch_reading_ease'], name=quality, showlegend=False,
-                  marker_color={'High': '#28a745', 'Medium': '#ffc107', 'Low': '#dc3545'}[quality]),
-            row=1, col=2
-        )
-    
-    fig.update_layout(height=400)
-    st.plotly_chart(fig, use_container_width=True)
-
 if __name__ == "__main__":
-
     main()
