@@ -38,13 +38,6 @@ wheels/
 *.swo
 .DS_Store
 
-# Data files (large HTML content)
-data/raw_html/
-*.html
-
-# Model checkpoints (if too large)
-models/*.h5
-models/*.pth
 
 # Logs
 *.log
