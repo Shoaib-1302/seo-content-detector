@@ -31,6 +31,10 @@ wheels/
 .env
 .venv
 
+# Allow CSV files
+!data/*.csv
+!data/**/*.csv
+
 # IDE
 .vscode/
 .idea/
