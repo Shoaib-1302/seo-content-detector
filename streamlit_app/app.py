@@ -74,7 +74,7 @@ if 'model_loaded' not in st.session_state:
 def initialize_app():
     """Load model and existing dataset."""
     try:
-        model_data = load_model('models/quality_model.pkl')
+        model_data = load_model('streamlit_app/models/quality_model.pkl')
         features_df = pd.read_csv('data/features.csv')
         extracted_df = pd.read_csv('data/extracted_content.csv')
         
@@ -560,4 +560,5 @@ def show_visualizations_page(features_df):
     st.plotly_chart(fig, use_container_width=True)
 
 if __name__ == "__main__":
+
     main()
