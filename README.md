@@ -4,7 +4,7 @@ A comprehensive machine learning pipeline that analyzes web content for SEO qual
 
 ## 🚀 Live Demo
 
-**Streamlit App:** [https://seo-content-detector-swxhgnpgvun8uuhlzwyxda.streamlit.app/]([https://your-app-name.streamlit.app](https://seo-content-detector-swxhgnpgvun8uuhlzwyxda.streamlit.app/))
+**Streamlit App:** [https://seo-content-detector-swxhgnpgvun8uuhlzwyxda.streamlit.app]([https://your-app-name.streamlit.app](https://seo-content-detector-swxhgnpgvun8uuhlzwyxda.streamlit.app/))
 
 ## Project Overview
 
