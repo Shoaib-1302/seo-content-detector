@@ -237,18 +237,6 @@ print(json.dumps(result, indent=2))
 - **Entity Recognition**: Extracts 5-10 key entities per document
 - **Topic Modeling**: Discovers 3 dominant themes across dataset
 
-## Visualizations
-
-The project includes comprehensive visualizations:
-
-1. **Confusion Matrix**: Model classification performance
-2. **Similarity Heatmap**: Content similarity across pages
-3. **Feature Distributions**: Box plots by quality level
-4. **Quality Distribution**: Pie chart of dataset composition
-5. **Word Clouds**: Visual representation of key terms
-6. **Topic Weights**: Bar charts of dominant topics
-7. **Sentiment Scores**: Polarity and subjectivity metrics
-
 ## API Reference
 
 ### Core Functions
